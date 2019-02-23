@@ -5,15 +5,34 @@
 
 <style type="text/css">
 
-svg {
-  border:1px solid #f0f;
-}
+	svg {
+		border:1px solid #f0f;
+	}
 
 /*NEW CSS GOES HERE*/
+	.axis line {
+		stroke-width:1px;
+		stroke: #ccc;
+		stroke-dasharray: 2px 2px;
+	}
 
+	.axis text {
+		font-size: 12px;
+		fill: #777;
+	}
+
+	.axis path {
+		display: none;
+	}
+	
+	.ufoGroup text {
+		fill: #aaa; /*grey out text*/
+		font-size: 11px;
+	}
 </style>
-
+ 
 <body>
+	<div id='titleDiv'></>
 </body>
 
 <script>
@@ -37,11 +56,27 @@ window.data = data;
 
 var radius = 10;
 
+
+// d3.csv("data/ufo.csv", ready)
+
+//function ready(error, data) {
+
+//  if (error) return console.warn(error)
+//	d3.csv("/Projects&Exerciese/FirstCompleteScatter/data/ufo.csv", function(error, data) {
+//		if (error) throw error;
+//			console.log(data); // [{"Hello": "world"}, …]
+//})};
+
+
 // format data
 data.forEach(function(d) {
   d.count = +d.count;
   d.month = d.date.split('/')[0];
+  d.year = d.date.split('/')[1];
+  //d.year = d.date.getYear() + 1900
 });
+
+// var startData = data.filter(function(d) { return d.year == 2018; })
 
 // create svg
 var margin = {top: 20, right: 10, bottom: 20, left: 30};
@@ -66,9 +101,11 @@ var yScale = d3.scaleLinear()
   .range([height, 0])
 
 // add axes
-var xAxis = d3.axisBottom(xScale);
+var xAxis = d3.axisBottom(xScale)
+	.tickSize(-height);
 
-var yAxis = d3.axisLeft(yScale);
+var yAxis = d3.axisLeft(yScale)
+	.tickSize(-width);
 
 svg.append('g')
   .attr('class', 'x axis')
@@ -84,20 +121,60 @@ var ufoGroup = svg.selectAll('.ufoGroup')
   .data(data).enter().append('g')
   .attr('class', 'ufoGroup')
   .attr('transform', function(d) { return 'translate(' + xScale(d.month) + ',' + yScale(d.count) + ')'})
-
+  .on('mouseenter', function(d) {
+	//add code here to make text visible
+	d3.select(this)
+		.select('text')
+		.transition()
+		.style('opacity', 1)
+		.style('fill', 'black')
+	d3.selectAll('circle')
+		.style('opacity', 0.5)
+	d3.select(this)
+        .select('circle')
+        .transition()
+		.ease(d3.easeElastic)
+		.duration(500)
+        .attr('r', radius*2)
+		.style('opacity', 1)
+  })
+  .on('mouseleave', function(d) {
+	d3.select(this)
+		.select('text')
+		.transition()
+		.duration(500)
+		.style('opacity', 0)
+		.style('fill', '#aaa')
+	d3.selectAll('circle')
+		.style('opacity', 1)
+		.transition()
+		.duration(500)
+	d3.select(this)
+		.select('circle')
+		.transition()
+		.duration(500)
+		.attr('r', radius)
+  })
+  
 // add circles to group
 ufoGroup.append('circle')
   .attr('class', 'ufoCircle')
   .attr('r', radius)
+  .style('fill', 'pink');
 
 // add text to group
 ufoGroup.append('text')
   .attr('class', 'ufoText')
-  .attr('dx', radius)
-  .attr('dy', radius)
+  .attr('dx', radius*2)
+  .attr('dy', radius*2)
   .text(function(d) { return d.count;})
+  .attr('opacity', 0);
 
-
+// add a title to the graph
+d3.select('#titleDiv')
+	.append('h1')
+	.attr('id', 'titleText')
+	.text('UFO Sightings in 2018');
 </script>
 
 
